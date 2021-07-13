@@ -4,7 +4,7 @@ from joystick import Joystick
 
 class Client:
     def __init__(self, xbox):
-        HOST = '127.0.0.1'
+        HOST = '192.168.4.1'
         PORT = 6969
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
