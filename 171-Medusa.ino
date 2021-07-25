@@ -4,14 +4,18 @@
 #define port 6969 
 #define left_pin 3
 #define right_pin 4
-#define cmd_size 16
+#define cmd_size 12
 
 bool enabled = false;
 
-char cmd[] = "E 100 90";
+char cmd[cmd_size];
+char keepalive[] = {'k','e','e','p','a','l','i','v','e',' ',' ',NULL};
 
 Servo leftMotor;  // Motor controllers use same signal as servos
 Servo rightMotor;
+
+long last_time = 0;
+long current_time = 0;
 
 WiFiServer server(port);
 
@@ -35,15 +39,39 @@ void setup()
 void loop()
 {
   WiFiClient client = server.available();
-
-  while (client.connected())
-  {
-    if (client.available())
+  if (client) {
+    while (client.connected())
     {
-      client.readBytes(cmd, cmd_size);
-      Serial.println(cmd);
+      if (client.available())
+      {
+        client.readBytesUntil('\n', cmd, cmd_size);
+//        for(int i=0; i<cmd_size; i++) {
+//          Serial.print(cmd[i], DEC);
+//        }
+//        Serial.println();
+
+        if (array_cmp(cmd, keepalive)) {
+          client.println("OK");
+        }
+        
+        Serial.println(cmd);
+        delay(100);
+      }
     }
   }
+
+  Serial.printf("Stations connected to soft-AP = %d\n", WiFi.softAPgetStationNum());
+  delay(1000);
+}
+
+boolean array_cmp(char *a, char *b){
+      int n;
+
+      // test each element to be the same. if not, return false
+      for (n=0;n<cmd_size;n++) if (a[n]!=b[n]) return false;
+
+      //ok, if we have not returned yet, they are equal :)
+      return true;
 }
 
 void handleIncomingData() {
